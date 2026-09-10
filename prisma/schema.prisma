@@ -36,6 +36,10 @@ model Tenant {
   roles       Role[]
   auditLogs   AuditLog[]
   sampleItems SampleItem[]
+  newsCategories NewsCategory[]
+  newsArticles   NewsArticle[]
+  personnelDepartments PersonnelDepartment[]
+  personnels           Personnel[]
 
   @@map("tenants")
 }
@@ -63,6 +67,8 @@ model User {
   userTenants UserTenant[]
   authTokens  AuthToken[]
   auditLogs   AuditLog[]   @relation("AuditActor")
+  authoredNews NewsArticle[] @relation("NewsAuthor")
+  reviewedNews NewsArticle[] @relation("NewsReviewer")
 
   @@map("users")
 }
@@ -210,3 +216,168 @@ model SampleItem {
   @@index([tenantId])
   @@map("sample_items")
 }
+
+enum NewsStatus {
+  DRAFT
+  PENDING_REVIEW
+  REVISION_REQUESTED
+  PUBLISHED
+  ARCHIVED
+}
+
+model NewsCategory {
+  id           String   @id @default(uuid()) @db.Uuid
+  tenantId     String   @map("tenant_id") @db.Uuid
+  nameTh       String   @map("name_th") @db.VarChar(100)
+  nameEn       String   @map("name_en") @db.VarChar(100)
+  slug         String   @db.VarChar(100)
+  colorBadge   String?  @default("blue") @map("color_badge") @db.VarChar(50)
+  displayOrder Int      @default(0) @map("display_order")
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz()
+
+  tenant   Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  articles NewsArticle[]
+
+  @@unique([tenantId, slug])
+  @@index([tenantId, displayOrder])
+  @@map("news_categories")
+}
+
+model NewsArticle {
+  id             String     @id @default(uuid()) @db.Uuid
+  tenantId       String     @map("tenant_id") @db.Uuid
+  categoryId     String     @map("category_id") @db.Uuid
+  authorId       String     @map("author_id") @db.Uuid
+  reviewedById   String?    @map("reviewed_by_id") @db.Uuid
+  titleTh        String     @map("title_th") @db.VarChar(255)
+  titleEn        String     @map("title_en") @db.VarChar(255)
+  slug           String     @db.VarChar(255)
+  summaryTh      String?    @map("summary_th") @db.VarChar(500)
+  summaryEn      String?    @map("summary_en") @db.VarChar(500)
+  contentTh      String     @map("content_th") @db.Text
+  contentEn      String     @map("content_en") @db.Text
+  coverImageUrl  String?    @map("cover_image_url") @db.VarChar(500)
+  youtubeUrl     String?    @map("youtube_url") @db.VarChar(255)
+  status         NewsStatus @default(DRAFT)
+  revisionNotes  String?    @map("revision_notes") @db.VarChar(500)
+  isPinned       Boolean    @default(false) @map("is_pinned")
+  pinnedOrder    Int        @default(0) @map("pinned_order")
+  publishedAt    DateTime?  @map("published_at") @db.Timestamptz()
+  expiresAt      DateTime?  @map("expires_at") @db.Timestamptz()
+  viewCount      Int        @default(0) @map("view_count")
+  createdAt      DateTime   @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt      DateTime   @updatedAt @map("updated_at") @db.Timestamptz()
+
+  tenant      Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  category    NewsCategory     @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  author      User             @relation("NewsAuthor", fields: [authorId], references: [id], onDelete: Restrict)
+  reviewedBy  User?            @relation("NewsReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+  images      NewsImage[]
+  attachments NewsAttachment[]
+
+  @@unique([tenantId, slug])
+  @@index([tenantId, status, publishedAt])
+  @@index([tenantId, isPinned, pinnedOrder])
+  @@map("news_articles")
+}
+
+model NewsImage {
+  id           String   @id @default(uuid()) @db.Uuid
+  articleId    String   @map("article_id") @db.Uuid
+  imageUrl     String   @map("image_url") @db.VarChar(500)
+  captionTh    String?  @map("caption_th") @db.VarChar(255)
+  captionEn    String?  @map("caption_en") @db.VarChar(255)
+  displayOrder Int      @default(0) @map("display_order")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  article NewsArticle @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@index([articleId, displayOrder])
+  @@map("news_images")
+}
+
+model NewsAttachment {
+  id            String   @id @default(uuid()) @db.Uuid
+  articleId     String   @map("article_id") @db.Uuid
+  fileName      String   @map("file_name") @db.VarChar(255)
+  fileUrl       String   @map("file_url") @db.VarChar(500)
+  fileSize      Int      @default(0) @map("file_size")
+  mimeType      String?  @map("mime_type") @db.VarChar(100)
+  downloadCount Int      @default(0) @map("download_count")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  article NewsArticle @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@index([articleId])
+  @@map("news_attachments")
+}
+
+enum PersonnelType {
+  EXECUTIVE
+  ACADEMIC
+  SUPPORT
+}
+
+model PersonnelDepartment {
+  id           String      @id @default(uuid()) @db.Uuid
+  tenantId     String      @map("tenant_id") @db.Uuid
+  nameTh       String      @map("name_th") @db.VarChar(150)
+  nameEn       String      @map("name_en") @db.VarChar(150)
+  slug         String      @db.VarChar(100)
+  description  String?     @db.VarChar(500)
+  displayOrder Int         @default(0) @map("display_order")
+  isActive     Boolean     @default(true) @map("is_active")
+  createdAt    DateTime    @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt    DateTime    @updatedAt @map("updated_at") @db.Timestamptz()
+
+  tenant     Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  personnels Personnel[]
+
+  @@unique([tenantId, slug])
+  @@index([tenantId, displayOrder])
+  @@map("personnel_departments")
+}
+
+model Personnel {
+  id           String        @id @default(uuid()) @db.Uuid
+  tenantId     String        @map("tenant_id") @db.Uuid
+  departmentId String        @map("department_id") @db.Uuid
+  type         PersonnelType @default(ACADEMIC)
+
+  titleTh      String?       @map("title_th") @db.VarChar(50)
+  titleEn      String?       @map("title_en") @db.VarChar(50)
+  firstNameTh  String        @map("first_name_th") @db.VarChar(100)
+  lastNameTh   String        @map("last_name_th") @db.VarChar(100)
+  firstNameEn  String        @map("first_name_en") @db.VarChar(100)
+  lastNameEn   String        @map("last_name_en") @db.VarChar(100)
+
+  academicRankTh String?     @map("academic_rank_th") @db.VarChar(100)
+  academicRankEn String?     @map("academic_rank_en") @db.VarChar(100)
+  positionTh   String        @map("position_th") @db.VarChar(150)
+  positionEn   String        @map("position_en") @db.VarChar(150)
+
+  email        String?       @db.VarChar(255)
+  phone        String?       @db.VarChar(50)
+  officeRoom   String?       @map("office_room") @db.VarChar(100)
+
+  education    String?       @db.Text
+  expertise    String?       @db.Text
+  websiteUrl   String?       @map("website_url") @db.VarChar(500)
+  avatarUrl    String?       @map("avatar_url") @db.VarChar(500)
+
+  displayOrder Int           @default(0) @map("display_order")
+  isActive     Boolean       @default(true) @map("is_active")
+  createdAt    DateTime      @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt    DateTime      @updatedAt @map("updated_at") @db.Timestamptz()
+
+  tenant     Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  department PersonnelDepartment @relation(fields: [departmentId], references: [id], onDelete: Restrict)
+
+  @@index([tenantId, type, displayOrder])
+  @@index([tenantId, departmentId])
+  @@map("personnels")
+}
+
+

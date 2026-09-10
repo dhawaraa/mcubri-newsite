@@ -1,6 +1,8 @@
-import { LayoutDashboard, Users, Settings, Layers, type LucideIcon } from "lucide-react";
+import { LayoutDashboard, Users, Settings, Layers, Newspaper, UserCheck, type LucideIcon } from "lucide-react";
 import { hasPermission, P } from "@/features/identity";
 import { SAMPLE_P } from "@/features/sample";
+import { NEWS_P } from "@/features/news";
+import { PERSONNEL_P } from "@/features/personnel";
 
 export interface NavItem {
   /** i18n key */
@@ -16,6 +18,28 @@ export interface NavCrumb { title: string; href: string }
 
 export const sidebarGroups: NavGroup[] = [
   { label: "nav.group.overview", items: [{ title: "nav.dashboard", href: "/dashboard", icon: LayoutDashboard }] },
+  {
+    label: "news.title",
+    items: [
+      {
+        title: "news.title",
+        href: "/news",
+        icon: Newspaper,
+        permission: NEWS_P.newsRead,
+      },
+    ],
+  },
+  {
+    label: "personnel.title",
+    items: [
+      {
+        title: "personnel.title",
+        href: "/personnel",
+        icon: UserCheck,
+        permission: PERSONNEL_P.personnelRead,
+      },
+    ],
+  },
   {
     label: "nav.group.sample",
     items: [{ title: "sample.nav", href: "/sample", icon: Layers, permission: SAMPLE_P.sampleRead }],

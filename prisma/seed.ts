@@ -27,6 +27,46 @@ async function main() {
   for (const u of users) {
     await seedUser(prisma, core.tenantId, { ...u, passwordHash: hash, roleIds: u.roles.map((c) => core.roleIds[c]) });
   }
+
+  // Seed หมวดหมู่ข่าวสารตั้งต้น
+  const academicCat = await prisma.newsCategory.upsert({
+    where: { tenantId_slug: { tenantId: core.tenantId, slug: "academic-research" } },
+    update: {},
+    create: {
+      tenantId: core.tenantId,
+      nameTh: "ข่าววิชาการและงานวิจัย",
+      nameEn: "Academic & Research",
+      slug: "academic-research",
+      colorBadge: "blue",
+      displayOrder: 1,
+    },
+  });
+
+  const adminUser = await prisma.user.findUnique({ where: { email: "admin@app.local" } });
+  if (adminUser) {
+    await prisma.newsArticle.upsert({
+      where: { tenantId_slug: { tenantId: core.tenantId, slug: "welcome-faculty-web" } },
+      update: {},
+      create: {
+        tenantId: core.tenantId,
+        categoryId: academicCat.id,
+        authorId: adminUser.id,
+        titleTh: "ยินดีต้อนรับสู่ระบบบริหารจัดการข่าวสารและบริการคณะ",
+        titleEn: "Welcome to the Faculty Web Platform",
+        slug: "welcome-faculty-web",
+        summaryTh: "เปิดตัวแพลตฟอร์มสารสนเทศใหม่เพื่อการบริหารจัดการข่าวสารและการบริการภายในคณะอย่างมีประสิทธิภาพ",
+        summaryEn: "Launching a modern web platform for faculty news management and administrative services.",
+        contentTh: "ระบบนี้พัฒนาขึ้นเพื่อรวบรวมข่าวสารประชาสัมพันธ์ งานวิชาการ การจองทรัพยากร และระบบเอกสารอิเล็กทรอนิกส์เข้าไว้ด้วยกันอย่างเป็นระบบ",
+        contentEn: "This platform integrates faculty news, academic updates, resource booking, and e-document workflows seamlessly.",
+        coverImageUrl: "https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=1200&auto=format&fit=crop&q=80",
+        status: "PUBLISHED",
+        isPinned: true,
+        pinnedOrder: 1,
+        publishedAt: new Date(),
+      },
+    });
+  }
+
   console.log(`[seed] เสร็จ — login: admin@app.local / ${DEV_PASSWORD}`);
 }
 
