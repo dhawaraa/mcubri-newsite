@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { GraduationCap, LogIn, Globe, Shield } from "lucide-react";
-import { useLocale, useT } from "@/shared/lib/i18n/client";
+import { GraduationCap, LogIn, Globe } from "lucide-react";
+import { useLocale } from "@/shared/lib/i18n/client";
 import { setLocaleAction } from "@/features/identity/actions";
 
 interface PortalNavProps {
@@ -10,9 +10,8 @@ interface PortalNavProps {
   tenantNameEn?: string;
 }
 
-export function PortalNav({ tenantNameTh, tenantNameEn }: PortalNavProps) {
+export function PortalNav({ tenantNameTh: _tenantNameTh, tenantNameEn: _tenantNameEn }: PortalNavProps) {
   const locale = useLocale();
-  const t = useT();
 
   const toggleLanguage = async () => {
     const nextLocale = locale === "th" ? "en" : "th";

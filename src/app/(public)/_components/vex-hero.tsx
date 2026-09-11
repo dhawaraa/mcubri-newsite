@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { LogIn, Sparkles, Menu, X, Globe, GraduationCap, ChevronLeft, ChevronRight, Compass } from "lucide-react";
+import Image from "next/image";
+import { LogIn, Sparkles, Menu, X, Globe, GraduationCap, Compass } from "lucide-react";
 import { useLocale } from "@/shared/lib/i18n/client";
 import { setLocaleAction } from "@/features/identity/actions";
 
@@ -42,7 +43,7 @@ interface VexHeroProps {
   tenantNameEn?: string;
 }
 
-export function VexHero({ tenantNameTh, tenantNameEn }: VexHeroProps) {
+export function VexHero({ tenantNameTh: _tenantNameTh, tenantNameEn: _tenantNameEn }: VexHeroProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
   const locale = useLocale();
@@ -102,12 +103,15 @@ export function VexHero({ tenantNameTh, tenantNameEn }: VexHeroProps) {
                 isActive ? "opacity-100" : "opacity-0 pointer-events-none"
               }`}
             >
-              <img
+              <Image
                 src={img.src}
                 alt={locale === "en" ? img.titleEn : img.titleTh}
-                className={`w-full h-full object-cover transition-transform duration-[7000ms] ease-out ${
+                fill
+                priority={idx === 0}
+                className={`object-cover transition-transform duration-[7000ms] ease-out ${
                   isActive ? "scale-105" : "scale-100"
                 }`}
+                sizes="100vw"
               />
             </div>
           );

@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Calendar, Eye, Tag, Share2 } from "lucide-react";
+import Image from "next/image";
+import { ArrowLeft, Calendar, Eye, Tag } from "lucide-react";
 import { prisma } from "@/shared/lib/infra/prisma";
 import { getPublicArticleBySlug, getPublishedNewsArticles } from "@/features/news/server";
 import { getLocale } from "@/shared/lib/i18n/server";
@@ -104,11 +105,14 @@ export default async function ArticleDetailPage({ params }: ArticleDetailPagePro
 
             {/* Cover Image (Full Width of Column) */}
             {article.coverImageUrl && (
-              <div className="rounded-2xl overflow-hidden shadow-sm border border-zinc-200 dark:border-zinc-800 aspect-video bg-zinc-100 dark:bg-zinc-900">
-                <img
+              <div className="relative rounded-2xl overflow-hidden shadow-sm border border-zinc-200 dark:border-zinc-800 aspect-video bg-zinc-100 dark:bg-zinc-900">
+                <Image
                   src={article.coverImageUrl}
                   alt={title}
-                  className="w-full h-full object-cover"
+                  fill
+                  priority
+                  className="object-cover"
+                  sizes="(max-width: 1024px) 100vw, 800px"
                 />
               </div>
             )}

@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Calendar, Eye, Pin, ArrowRight, Newspaper, PlayCircle, ChevronLeft, ChevronRight } from "lucide-react";
 import { useLocale } from "@/shared/lib/i18n/client";
 import type { NewsArticleDto, NewsCategoryDto } from "@/features/news";
@@ -43,22 +44,6 @@ export function PortalClient({
     setSearch(val);
     setCurrentPage(1);
   };
-
-  const pinnedArticles = initialArticles.filter((a) => a.isPinned);
-  const sliderArticles = pinnedArticles.length > 0 ? pinnedArticles : initialArticles.slice(0, 3);
-  const [currentSlide, setCurrentSlide] = useState<number>(0);
-  const [isPaused, setIsPaused] = useState<boolean>(false);
-
-  // Auto-play slider ทุก 5 วินาที (หยุดเมื่อนำเมาส์ไปชี้)
-  useEffect(() => {
-    if (sliderArticles.length <= 1 || isPaused) return;
-    const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % sliderArticles.length);
-    }, 5000);
-    return () => clearInterval(timer);
-  }, [sliderArticles.length, isPaused]);
-
-  const activeArticle = sliderArticles[currentSlide] || sliderArticles[0];
 
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return "-";
@@ -164,13 +149,12 @@ export function PortalClient({
                     {/* Thumbnail / Cover */}
                     <Link href={`/article/${art.slug}`} className="relative block h-48 overflow-hidden bg-zinc-100 dark:bg-zinc-800">
                       {art.coverImageUrl ? (
-                        <img
+                        <Image
                           src={art.coverImageUrl}
                           alt={title}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                          onError={(e) => {
-                            (e.target as HTMLElement).style.display = "none";
-                          }}
+                          fill
+                          className="object-cover group-hover:scale-105 transition-transform duration-300"
+                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-zinc-400">

@@ -2,7 +2,7 @@
 
 import { prisma } from "@/shared/lib/infra/prisma";
 import type { DepartmentDto, PersonnelDto } from "./services";
-import type { PersonnelType } from "@/generated/prisma";
+import type { PersonnelType, Prisma } from "@/generated/prisma";
 
 export interface PublicPersonnelPageData {
   tenant: {
@@ -32,7 +32,7 @@ export async function getPublicPersonnelDataAction(options?: {
     orderBy: [{ displayOrder: "asc" }, { createdAt: "asc" }],
   });
 
-  const where: any = {
+  const where: Prisma.PersonnelWhereInput = {
     tenantId: tenant.id,
     isActive: true,
   };

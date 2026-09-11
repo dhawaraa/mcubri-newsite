@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useEffect } from "react";
+import { useState, useTransition, useEffect, useCallback } from "react";
 import {
   Plus,
   Search,
@@ -13,7 +13,6 @@ import {
   Tag,
   X,
   Upload,
-  ImageIcon,
   Loader2,
   Crop,
   ZoomIn,
@@ -102,7 +101,7 @@ export function NewsClient({
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
   const [isCropModalOpen, setIsCropModalOpen] = useState(false);
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     setIsLoading(true);
     const [artsRes, catsRes] = await Promise.all([
       getNewsArticlesAction({
@@ -116,10 +115,31 @@ export function NewsClient({
     if (artsRes.ok) setArticles(artsRes.data);
     if (catsRes.ok) setCategories(catsRes.data);
     setIsLoading(false);
-  };
+  }, [activeTab, selectedCategory, search]);
 
   useEffect(() => {
-    loadData();
+    let active = true;
+    const fetchFresh = async () => {
+      setIsLoading(true);
+      const [artsRes, catsRes] = await Promise.all([
+        getNewsArticlesAction({
+          status: activeTab === "ALL" ? undefined : activeTab,
+          categoryId: selectedCategory === "ALL" ? undefined : selectedCategory,
+          search: search.trim() || undefined,
+        }),
+        getNewsCategoriesAction(),
+      ]);
+
+      if (!active) return;
+      if (artsRes.ok) setArticles(artsRes.data);
+      if (catsRes.ok) setCategories(catsRes.data);
+      setIsLoading(false);
+    };
+
+    fetchFresh();
+    return () => {
+      active = false;
+    };
   }, [activeTab, selectedCategory]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
@@ -499,17 +519,19 @@ export function NewsClient({
       <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-4 space-y-4 shadow-sm">
         {/* Status Tabs */}
         <div className="flex flex-wrap gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-3">
-          {[
-            { key: "ALL", label: t("news.tab.all") },
-            { key: "PUBLISHED", label: t("news.tab.published") },
-            { key: "PENDING_REVIEW", label: t("news.tab.pending") },
-            { key: "REVISION_REQUESTED", label: t("news.tab.revision") },
-            { key: "DRAFT", label: t("news.tab.draft") },
-            { key: "ARCHIVED", label: t("news.tab.archived") },
-          ].map((tab) => (
+          {(
+            [
+              { key: "ALL", label: t("news.tab.all") },
+              { key: "PUBLISHED", label: t("news.tab.published") },
+              { key: "PENDING_REVIEW", label: t("news.tab.pending") },
+              { key: "REVISION_REQUESTED", label: t("news.tab.revision") },
+              { key: "DRAFT", label: t("news.tab.draft") },
+              { key: "ARCHIVED", label: t("news.tab.archived") },
+            ] as const
+          ).map((tab) => (
             <button
               key={tab.key}
-              onClick={() => setActiveTab(tab.key as any)}
+              onClick={() => setActiveTab(tab.key)}
               className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
                 activeTab === tab.key
                   ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900"

@@ -1,5 +1,4 @@
 import { getPublicPortalDataAction } from "@/features/news/actions";
-import { PortalNav } from "./(public)/_components/portal-nav";
 import { PortalClient } from "./(public)/_components/portal-client";
 import { VexHero } from "./(public)/_components/vex-hero";
 

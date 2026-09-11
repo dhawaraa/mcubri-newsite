@@ -5,7 +5,7 @@ import type {
   CreateNewsArticleInput,
   UpdateNewsArticleInput,
 } from "./validations";
-import type { NewsStatus } from "@/generated/prisma";
+import type { NewsStatus, Prisma } from "@/generated/prisma";
 
 export interface NewsCategoryDto {
   id: string;
@@ -139,7 +139,7 @@ export async function listNewsArticles(
   tenantId: string,
   filter?: { status?: NewsStatus; categoryId?: string; search?: string }
 ): Promise<NewsArticleDto[]> {
-  const where: any = { tenantId };
+  const where: Prisma.NewsArticleWhereInput = { tenantId };
   if (filter?.status) where.status = filter.status;
   if (filter?.categoryId) where.categoryId = filter.categoryId;
   if (filter?.search) {
@@ -432,7 +432,7 @@ export async function getPublishedNewsArticles(
   categorySlug?: string
 ): Promise<NewsArticleDto[]> {
   const now = new Date();
-  const where: any = {
+  const where: Prisma.NewsArticleWhereInput = {
     tenantId,
     status: "PUBLISHED",
     publishedAt: { lte: now },

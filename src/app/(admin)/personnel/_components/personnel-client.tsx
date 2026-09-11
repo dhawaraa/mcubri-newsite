@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useEffect } from "react";
+import { useState, useTransition, useEffect, useCallback } from "react";
 import {
   Plus,
   Search,
@@ -18,9 +18,6 @@ import {
   Mail,
   Phone,
   MapPin,
-  Globe,
-  GraduationCap,
-  BookOpen,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -103,7 +100,7 @@ export function PersonnelClient({
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
   const [isCropModalOpen, setIsCropModalOpen] = useState(false);
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     setIsLoading(true);
     const [deptsRes, persRes] = await Promise.all([
       getDepartmentsAction(),
@@ -117,10 +114,31 @@ export function PersonnelClient({
     if (deptsRes.ok) setDepartments(deptsRes.data);
     if (persRes.ok) setPersonnels(persRes.data);
     setIsLoading(false);
-  };
+  }, [selectedDepartment, selectedType, search]);
 
   useEffect(() => {
-    loadData();
+    let active = true;
+    const fetchFresh = async () => {
+      setIsLoading(true);
+      const [deptsRes, persRes] = await Promise.all([
+        getDepartmentsAction(),
+        getPersonnelsAction({
+          departmentId: selectedDepartment === "ALL" ? undefined : selectedDepartment,
+          type: selectedType === "ALL" ? undefined : selectedType,
+          search: search.trim() || undefined,
+        }),
+      ]);
+
+      if (!active) return;
+      if (deptsRes.ok) setDepartments(deptsRes.data);
+      if (persRes.ok) setPersonnels(persRes.data);
+      setIsLoading(false);
+    };
+
+    fetchFresh();
+    return () => {
+      active = false;
+    };
   }, [selectedDepartment, selectedType]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
@@ -494,7 +512,7 @@ export function PersonnelClient({
           {/* Type Filter */}
           <select
             value={selectedType}
-            onChange={(e) => setSelectedType(e.target.value as any)}
+            onChange={(e) => setSelectedType(e.target.value as "ALL" | PersonnelType)}
             className="text-xs h-9 px-3 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 focus:outline-none"
           >
             <option value="ALL">{t("personnel.allTypes")}</option>
@@ -762,7 +780,7 @@ export function PersonnelClient({
                     </label>
                     <select
                       value={formType}
-                      onChange={(e) => setFormType(e.target.value as any)}
+                      onChange={(e) => setFormType(e.target.value as PersonnelType)}
                       className="w-full text-xs h-9 px-3 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 focus:outline-none"
                     >
                       <option value="EXECUTIVE">ผู้บริหาร (Executive)</option>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import {
   Search,
   Mail,
@@ -13,7 +14,6 @@ import {
   X,
   ExternalLink,
   ChevronRight,
-  Briefcase,
   Users,
 } from "lucide-react";
 import { useLocale, useT } from "@/shared/lib/i18n/client";
@@ -100,14 +100,14 @@ export function PublicPersonnelClient({
         {/* Type Tabs */}
         <div className="flex flex-wrap items-center justify-center gap-2 pb-2">
           {[
-            { id: "ALL", labelTh: "ทั้งหมด", labelEn: "All Personnel" },
-            { id: "EXECUTIVE", labelTh: "คณะผู้บริหาร", labelEn: "Executives" },
-            { id: "ACADEMIC", labelTh: "สายวิชาการ (คณาจารย์)", labelEn: "Academic Faculty" },
-            { id: "SUPPORT", labelTh: "สายสนับสนุน", labelEn: "Support Staff" },
+            { id: "ALL" as const, labelTh: "ทั้งหมด", labelEn: "All Personnel" },
+            { id: "EXECUTIVE" as const, labelTh: "คณะผู้บริหาร", labelEn: "Executives" },
+            { id: "ACADEMIC" as const, labelTh: "สายวิชาการ (คณาจารย์)", labelEn: "Academic Faculty" },
+            { id: "SUPPORT" as const, labelTh: "สายสนับสนุน", labelEn: "Support Staff" },
           ].map((type) => (
             <button
               key={type.id}
-              onClick={() => setActiveType(type.id as any)}
+              onClick={() => setActiveType(type.id)}
               className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
                 activeType === type.id
                   ? "bg-blue-600 text-white shadow-md shadow-blue-600/20 scale-[1.02]"
@@ -179,10 +179,12 @@ export function PublicPersonnelClient({
                   {/* Avatar Container (Fixed 3:4 aspect ratio) */}
                   <div className="relative aspect-[3/4] w-full bg-zinc-100 dark:bg-zinc-800 overflow-hidden">
                     {p.avatarUrl ? (
-                      <img
+                      <Image
                         src={p.avatarUrl}
                         alt={fullName}
-                        className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500"
+                        fill
+                        className="object-cover object-top group-hover:scale-105 transition-transform duration-500"
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-zinc-300 dark:text-zinc-600">
@@ -254,12 +256,14 @@ export function PublicPersonnelClient({
 
             <div className="grid grid-cols-1 sm:grid-cols-5 max-h-[85vh] overflow-y-auto">
               {/* Left Column: Image */}
-              <div className="sm:col-span-2 bg-zinc-100 dark:bg-zinc-800 aspect-[3/4] sm:aspect-auto sm:h-full relative overflow-hidden">
+              <div className="sm:col-span-2 bg-zinc-100 dark:bg-zinc-800 aspect-[3/4] sm:aspect-auto sm:h-full relative overflow-hidden min-h-[320px]">
                 {selectedProfile.avatarUrl ? (
-                  <img
+                  <Image
                     src={selectedProfile.avatarUrl}
                     alt={selectedProfile.firstNameTh}
-                    className="w-full h-full object-cover object-top"
+                    fill
+                    className="object-cover object-top"
+                    sizes="(max-width: 640px) 100vw, 400px"
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-zinc-400">

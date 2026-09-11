@@ -53,6 +53,7 @@ export async function POST(req: Request) {
     const publicUrl = `/uploads/news/${uniqueFileName}`;
     return NextResponse.json({ url: publicUrl, fileName: uniqueFileName });
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error("Upload error:", error);
     return NextResponse.json({ error: "Upload failed" }, { status: 500 });
   }

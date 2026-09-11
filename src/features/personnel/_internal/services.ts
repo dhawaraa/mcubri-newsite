@@ -1,5 +1,5 @@
 import { prisma } from "@/shared/lib/infra/prisma";
-import type { PersonnelType } from "@/generated/prisma";
+import type { PersonnelType, Prisma } from "@/generated/prisma";
 
 export interface DepartmentDto {
   id: string;
@@ -146,7 +146,7 @@ export async function getPersonnels(
     search?: string;
   }
 ): Promise<PersonnelDto[]> {
-  const where: any = { tenantId };
+  const where: Prisma.PersonnelWhereInput = { tenantId };
 
   if (options?.departmentId) where.departmentId = options.departmentId;
   if (options?.type) where.type = options.type;
