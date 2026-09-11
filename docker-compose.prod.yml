@@ -1,0 +1,66 @@
+version: "3.9"
+
+services:
+  # --- Application Container (Next.js) ---
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3000:3000" # ผูกเฉพาะ Localhost เพื่อให้ Nginx Reverse Proxy เข้าถึงได้เท่านั้น
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?schema=public
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+      - NEXTAUTH_URL=${NEXTAUTH_URL}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - internal-net
+    volumes:
+      - uploads-data:/app/public/uploads
+    # Security: จำกัดทรัพยากรป้องกัน Crypto-mining สูบ CPU/RAM
+    deploy:
+      resources:
+        limits:
+          cpus: "2.00"
+          memory: 2048M
+
+  # --- Database Container (PostgreSQL 16) ---
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    # Security: ไม่ expose หรือ map พอร์ต 5432 ออกสู่ Host/Public เด็ดขาด
+    # ติดต่อได้เฉพาะ Service ภายใน network 'internal-net' เท่านั้น
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - internal-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    # Security: จำกัดทรัพยากรของ Database
+    deploy:
+      resources:
+        limits:
+          cpus: "2.00"
+          memory: 2048M
+
+networks:
+  internal-net:
+    driver: bridge
+    internal: false # ให้แอปออกเน็ตภายนอกได้ (เพื่อดึง CDN/API) แต่ห้ามเข้าถึง DB จากข้างนอก
+
+volumes:
+  postgres-data:
+    driver: local
+  uploads-data:
+    driver: local
